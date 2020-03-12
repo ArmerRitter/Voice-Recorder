@@ -14,12 +14,21 @@ protocol NumberOfRecordDelegate: class {
     func update(n: Int)
 }
 
+enum RecorderEror: Error {
+    case invalidPath
+}
 
+enum RecorderButtonState {
+    case Start
+    case Pause
+    case Resume
+}
 
 class RecordViewController: UIViewController, AVAudioRecorderDelegate {
     
     var recordingSession: AVAudioSession!
     var recorder: AVAudioRecorder!
+    var recorderButtonState: RecorderButtonState = .Start
     
     weak var delegate: NumberOfRecordDelegate?
 
@@ -35,97 +44,111 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
         return btn
     }()
     
-    var countOfRecords = 0
-    
+    //MARK: ViewDidLoad
     override func viewDidLoad() {
         view.backgroundColor = .white
         
-        
-        
+
         recordingSession = AVAudioSession.sharedInstance()
-        
-        if let number: Int = UserDefaults.standard.object(forKey: "myNumber") as? Int {
-            countOfRecords = number
-        }
-        
-        recordingSession.requestRecordPermission { (granted) in
+        recordingSession.requestRecordPermission {[unowned self] (granted) in
             if granted {
                 print("Allow")
+                do {
+                    try self.setupRecorder()
+                }
+                catch {
+                    print("Error: recorder is not ready")
+                    self.recorder = nil
+                }
+                //self.setupRecorder()
             }
         }
         
         setView()
         setConstraints()
+        
     }
     
     func getDirectory() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-       
-        return paths[0]
+        let url = paths[0].appendingPathComponent("Record.m4a")
+        return url
     }
     
-   
-    
-    @objc func startRecord() {
+    func setupRecorder() throws {
+        let filename = getDirectory()
         
-        if recorder == nil {
-            countOfRecords += 1
-            //ex.ex += 1
-            print(countOfRecords)
-            let filename = getDirectory().appendingPathComponent("Record \(countOfRecords).m4a")
-            
-            let settings = [AVFormatIDKey: Int(kAudioFormatMPEG4AAC), AVSampleRateKey: 12000, AVNumberOfChannelsKey: 1, AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue]
-            
-            do {
-               //try recordingSession.setCategory(.playAndRecord)
-               recorder =  try AVAudioRecorder(url: filename, settings: settings)
-                recorder.delegate = self
-                recorder.record()
-                
-                recordingButton.setTitle("Stop", for: .normal)
-            }
-            catch {
-                print("Error of recording")
-            }
-        } else {
-            recorder.stop()
-            recorder = nil
-            recordingButton.setTitle("Start", for: .normal)
-            
-            let nsDocumentDirectory = FileManager.SearchPathDirectory.documentDirectory
-            let nsUserDomainMask = FileManager.SearchPathDomainMask.userDomainMask
-            let paths = NSSearchPathForDirectoriesInDomains(nsDocumentDirectory, nsUserDomainMask, true)
-            
-            if let dirPath = paths.first {
-                let url = URL(fileURLWithPath: dirPath).appendingPathComponent("Record \(countOfRecords).m4a")
-                
-                let data = try! Data(contentsOf: url)
-               
-                let record = Audio(value: [data, Date()])
-                StorageManager.shared.addRecord(object: record)
-            }
-            
-            
+        let settings = [AVFormatIDKey: Int(kAudioFormatMPEG4AAC), AVSampleRateKey: 12000, AVNumberOfChannelsKey: 1, AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue]
+        
+        
+           try recordingSession.setCategory(.playAndRecord)
+           try recordingSession.setActive(true)
+           recorder =  try AVAudioRecorder(url: filename, settings: settings)
+            recorder.delegate = self
+    }
+
+    @objc func startRecord(sender: UIButton) {
+        
+        switch recorderButtonState {
+        case .Start:
+            recorder.record()
+            recorderButtonState = .Pause
+            recordingButton.setTitle("Pause", for: .normal)
+        case .Pause:
+            recorder.pause()
+            recorderButtonState = .Resume
+            recordingButton.setTitle("Resume", for: .normal)
+        case .Resume:
+            recorder.record()
+            recorderButtonState = .Pause
+            recordingButton.setTitle("Pause", for: .normal)
         }
+        
     }
     
+    @objc func doneRecord() {
+        
+        recorder.stop()
+        
+        do {
+            let data =  try fetchAudioData()
+            
+            let record = Audio(value: [data, Date()])
+            StorageManager.shared.addRecord(object: record)
+        } catch RecorderEror.invalidPath {
+            print("Error: path is not correct to AudioFile")
+        } catch {
+            print("Error: AudioFile not found")
+        }
+        
+        navigationController?.popViewController(animated: true)
+    }
+    
+    func fetchAudioData() throws -> Data {
+        let documentDirectory = FileManager.SearchPathDirectory.documentDirectory
+        let userDomainMask = FileManager.SearchPathDomainMask.userDomainMask
+        let paths = NSSearchPathForDirectoriesInDomains(documentDirectory, userDomainMask, true)
+        
+        if let dirPath = paths.first {
+            let url = URL(fileURLWithPath: dirPath).appendingPathComponent("Record.m4a")
+
+            let data = try Data(contentsOf: url)
+            return data
+        }
+        throw RecorderEror.invalidPath
+    }
+    
+    
+    
+    //MARK: Setup UI
     func setView() {
         view.addSubview(recordingButton)
         
-        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(lol))
+        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(doneRecord))
     }
-    
-    @objc func lol() {
-        print(countOfRecords,"Done")
-        delegate?.update(n: countOfRecords)
-        navigationController?.popViewController(animated: true)
-        
-    }
-    
-    
     
     func setConstraints() {
-        recordingButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 500).isActive = true
+        recordingButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -100).isActive = true
         recordingButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         recordingButton.widthAnchor.constraint(equalToConstant: 100).isActive = true
         recordingButton.heightAnchor.constraint(equalToConstant: 100).isActive = true

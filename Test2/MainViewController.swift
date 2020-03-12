@@ -20,7 +20,7 @@ class MainViewController: UITableViewController, NumberOfRecordDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-     //   Realm.Configuration.defaultConfiguration = config
+     
         setView()
         
     }
@@ -30,7 +30,8 @@ class MainViewController: UITableViewController, NumberOfRecordDelegate {
     }
     
     func update(n: Int) {
-        print(records.count)
+        
+        tableView.reloadData()
     }
     
     @objc func addNewRecord() {
@@ -41,6 +42,7 @@ class MainViewController: UITableViewController, NumberOfRecordDelegate {
     }
     
     func setView() {
+        
         
         records = StorageManager.shared.fetchRecords()
         print(records.count )
@@ -62,16 +64,21 @@ class MainViewController: UITableViewController, NumberOfRecordDelegate {
         //tableView.separatorStyle = .none
     }
 
-   
+   func getDirectory() -> URL {
+       let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+      
+       return paths[0]
+   }
 
 }
 
 extension MainViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
         let record = records[indexPath.row]
         playbackSession = AVAudioSession.sharedInstance()
-        
+       
         do {
             try playbackSession.setCategory(.playback)
             try playbackSession.setActive(true)
@@ -98,6 +105,7 @@ extension MainViewController {
         let record = records[indexPath.row]
         let df = DateFormatter()
         df.dateFormat = "dd.MM.YY - HH.mm.ss"
+        
         
         cell.textLabel?.text = "Record \(df.string(from: record.recordDate!))"
         return cell
