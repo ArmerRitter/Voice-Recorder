@@ -22,6 +22,8 @@
 		B04FBEF824182DCD00D2211F /* Audio.swift in Sources */ = {isa = PBXBuildFile; fileRef = B04FBEF724182DCD00D2211F /* Audio.swift */; };
 		B04FBEFA24182DE000D2211F /* StorageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B04FBEF924182DE000D2211F /* StorageManager.swift */; };
 		B050158F241D3177004CECB8 /* TimeCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B050158E241D3177004CECB8 /* TimeCounter.swift */; };
+		B050E9252423A091005B0191 /* PlaybackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B050E9242423A091005B0191 /* PlaybackManager.swift */; };
+		B050FF6024277F2C001C604D /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = B050FF5F24277F2C001C604D /* Extension.swift */; };
 		B056C22B24221F7100412BBD /* RecordCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B056C22A24221F7100412BBD /* RecordCell.swift */; };
 /* End PBXBuildFile section */
 
@@ -67,6 +69,8 @@
 		B04FBEF724182DCD00D2211F /* Audio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Audio.swift; sourceTree = "<group>"; };
 		B04FBEF924182DE000D2211F /* StorageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageManager.swift; sourceTree = "<group>"; };
 		B050158E241D3177004CECB8 /* TimeCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeCounter.swift; sourceTree = "<group>"; };
+		B050E9242423A091005B0191 /* PlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackManager.swift; sourceTree = "<group>"; };
+		B050FF5F24277F2C001C604D /* Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extension.swift; sourceTree = "<group>"; };
 		B056C22A24221F7100412BBD /* RecordCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -140,7 +144,9 @@
 				B056C22A24221F7100412BBD /* RecordCell.swift */,
 				B050158E241D3177004CECB8 /* TimeCounter.swift */,
 				B04FBEF724182DCD00D2211F /* Audio.swift */,
+				B050E9242423A091005B0191 /* PlaybackManager.swift */,
 				B04FBEF924182DE000D2211F /* StorageManager.swift */,
+				B050FF5F24277F2C001C604D /* Extension.swift */,
 				B04FBE7E2417D75700D2211F /* Main.storyboard */,
 				B04FBE812417D75900D2211F /* Assets.xcassets */,
 				B04FBE832417D75900D2211F /* LaunchScreen.storyboard */,
@@ -249,8 +255,10 @@
 			files = (
 				B04FBEF424182DA900D2211F /* MainViewController.swift in Sources */,
 				B04FBE792417D75700D2211F /* AppDelegate.swift in Sources */,
+				B050E9252423A091005B0191 /* PlaybackManager.swift in Sources */,
 				B056C22B24221F7100412BBD /* RecordCell.swift in Sources */,
 				B04FBE7B2417D75700D2211F /* SceneDelegate.swift in Sources */,
+				B050FF6024277F2C001C604D /* Extension.swift in Sources */,
 				B04FBEFA24182DE000D2211F /* StorageManager.swift in Sources */,
 				B04FBEF624182DC000D2211F /* RecordViewController.swift in Sources */,
 				B050158F241D3177004CECB8 /* TimeCounter.swift in Sources */,

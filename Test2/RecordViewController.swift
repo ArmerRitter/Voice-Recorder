@@ -28,22 +28,22 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
     
     var recordingSession: AVAudioSession!
     var recorder: AVAudioRecorder!
-    var recordingButtonState: RecorderButtonState = .Start
+    var stateOfRecorder: RecorderButtonState = .Start
     var timer: Timer?
-    var timeCounter = TimeCounter()
+    var timeIncrementCounter = TimeCounter()
     var constraints: [String : NSLayoutConstraint]!
-    var rateViews: [UIView] = []
+    var recordPowerViews: [UIView] = []
     let screenSize: CGRect = UIScreen.main.bounds
     
     var counter = 0 {
         didSet {
             let recPower: CGFloat = CGFloat(55 + recorder.averagePower(forChannel: 0))
             
-            rateViews[oldValue].frame.size.width = 15
-            rateViews[oldValue].frame.size.height = 2 * recPower
-            rateViews[oldValue].setGradientBackground(colorOne: #colorLiteral(red: 0.7450980544, green: 0.1568627506, blue: 0.07450980693, alpha: 1), colorTwo:.clear, location: [0.3, 1.0])
-          print(recPower)
-            for (i, value) in rateViews.enumerated() {
+            recordPowerViews[oldValue].frame.size.width = 15
+            recordPowerViews[oldValue].frame.size.height = 2 * recPower
+            recordPowerViews[oldValue].setGradientBackground(colorOne: #colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), colorTwo:.clear, location: [0.3, 1.0])
+          
+            for (i, value) in recordPowerViews.enumerated() {
                 value.frame.origin = CGPoint(x: Int(screenSize.width) - 20 * (oldValue - i), y: Int(screenSize.height / 2 - 50))
             view.addSubview(value)
                 
@@ -105,8 +105,8 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
     //MARK: ViewDidLoad
     override func viewDidLoad() {
         view.backgroundColor = #colorLiteral(red: 0.1411764771, green: 0.3960784376, blue: 0.5647059083, alpha: 1)
-        view.setGradientBackground(colorOne: .clear, colorTwo: #colorLiteral(red: 0.7450980544, green: 0.1568627506, blue: 0.07450980693, alpha: 1), location: [0.6, 1.0])
-        
+        view.setGradientBackground(colorOne: #colorLiteral(red: 0.7450980544, green: 0.1568627506, blue: 0.07450980693, alpha: 1), colorTwo: #colorLiteral(red: 0.1411764771, green: 0.3960784376, blue: 0.5647059083, alpha: 1), location: [0.3, 1.0])
+        view.clipsToBounds = true
 
         recordingSession = AVAudioSession.sharedInstance()
         recordingSession.requestRecordPermission {[unowned self] (granted) in
@@ -149,24 +149,24 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
 
     @objc func startRecord(sender: UIButton) {
         
-        switch recordingButtonState {
+        switch stateOfRecorder {
         case .Start:
             recorder.record()
             setAndResetTimer(on: true)
-            animateRecButton(state: recordingButtonState)
-            recordingButtonState = .Pause
+            animateRecButton(state: stateOfRecorder)
+            stateOfRecorder = .Pause
             recordingButton.setTitle("", for: .normal)
             navigationItem.leftBarButtonItem?.isEnabled = true
         case .Pause:
             recorder.pause()
             setAndResetTimer(on: false)
-            animateRecButton(state: recordingButtonState)
-            recordingButtonState = .Resume
+            animateRecButton(state: stateOfRecorder)
+            stateOfRecorder = .Resume
         case .Resume:
             recorder.record()
             setAndResetTimer(on: true)
-            animateRecButton(state: recordingButtonState)
-            recordingButtonState = .Pause
+            animateRecButton(state: stateOfRecorder)
+            stateOfRecorder = .Pause
             recordingButton.setTitle("", for: .normal)
         }
         
@@ -227,24 +227,25 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
     }
     
     @objc func onTimer() {
-        timeCounter.miliSeconds += 1
+        timeIncrementCounter.deciSeconds += 1
         
             recorder.updateMeters()
            // print(recorder.peakPower(forChannel: 0))
         let viewVisualAudio = visualAudioView.clone()
-        rateViews.append(viewVisualAudio)
+        recordPowerViews.append(viewVisualAudio)
         counter += 1
-        timeLabel.text = timeCounter.description
+        timeLabel.text = timeIncrementCounter.description
     }
     
     @objc func doneRecord() {
-        
         recorder.stop()
         
         do {
             let data =  try fetchAudioData()
             
-            let record = Audio(value: [data, Date()])
+            
+            let timeRecord = Double(timeIncrementCounter.deciSeconds)
+            let record = Audio(value: [data, Date(), timeRecord])
             StorageManager.shared.addRecord(object: record)
         } catch RecorderEror.invalidPath {
             print("Error: path is not correct to AudioFile")
@@ -271,7 +272,7 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
     
     
     
-    //MARK: Setup UI
+//MARK: Setup UI
     func setView() {
         view.addSubview(recordingButton)
         view.addSubview(timeLabel)
@@ -279,6 +280,7 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
         recordingButton.addSubview(pauseSymbolRight)
         recordingButton.addSubview(pauseSymbolLeft)
         
+        navigationController?.navigationBar.backgroundColor = #colorLiteral(red: 0.7450980544, green: 0.1568627506, blue: 0.07450980693, alpha: 1)
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(doneRecord))
         navigationItem.leftBarButtonItem?.tintColor = .white
         navigationItem.leftBarButtonItem?.isEnabled = false
@@ -327,25 +329,3 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
     
 }
 
-extension UIView {
-    
-    func setGradientBackground(colorOne: UIColor, colorTwo: UIColor, location: [NSNumber]) {
-        
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.frame = bounds
-        gradientLayer.colors = [colorOne.cgColor, colorTwo.cgColor]
-        gradientLayer.locations = location
-        gradientLayer.startPoint = CGPoint(x: 0.0, y: 0.0)
-        gradientLayer.endPoint = CGPoint(x: 0.0, y: 1.0)
-        
-        layer.insertSublayer(gradientLayer, at: 0)
-    }
-    
-    func clone() -> UIView {
-        let view = UIView(frame: self.frame)
-        view.backgroundColor = self.backgroundColor
-        view.layer.cornerRadius = self.layer.cornerRadius
-        view.clipsToBounds = true
-        return view
-    }
-}

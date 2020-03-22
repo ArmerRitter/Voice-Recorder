@@ -12,28 +12,50 @@ import Foundation
 struct TimeCounter: CustomStringConvertible {
     
     var minuts: Int {
-        return miliSeconds / 600
+        return deciSeconds / 600
     }
     var seconds: Int {
-        return miliSeconds / 10  - minuts * 60
+        return deciSeconds / 10  - minuts * 60
     }
-    var miliSeconds: Int
+    var deciSeconds: Int
     
     
     
     var description: String {
         
         guard seconds > 9 else {
-            return " 0\(minuts) : 0\(seconds),\(miliSeconds - seconds * 10 - minuts * 600)"
+            return " 0\(minuts) : 0\(seconds),\(deciSeconds - seconds * 10 - minuts * 600)"
         }
         guard minuts > 9 else {
-            return " 0\(minuts) : \(seconds),\(miliSeconds - seconds * 10 - minuts * 600)"
+            return " 0\(minuts) : \(seconds),\(deciSeconds - seconds * 10 - minuts * 600)"
         }
-        
-        return " \(minuts) : \(seconds),\(miliSeconds - seconds * 10 - minuts * 600)"
+        return " \(minuts) : \(seconds),\(deciSeconds - seconds * 10 - minuts * 600)"
     }
     
+    
+    var descriptionSecond: String {
+        
+        guard seconds > 9 else {
+            return " 0\(minuts):0\(seconds)"
+        }
+        guard minuts > 9 else {
+            return " 0\(minuts):\(seconds)"
+        }
+        return " \(minuts):\(seconds)"
+    }
+    
+    var descriptionThird: String {
+           
+           guard seconds > 9 else {
+               return "-0\(minuts):0\(seconds)"
+           }
+           guard minuts > 9 else {
+               return "-0\(minuts):\(seconds)"
+           }
+           return "-\(minuts):\(seconds)"
+       }
+    
     init() {
-        self.miliSeconds = 0
+        self.deciSeconds = 0
     }
 }

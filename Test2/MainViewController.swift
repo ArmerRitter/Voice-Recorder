@@ -10,6 +10,8 @@ import UIKit
 import AVFoundation
 import RealmSwift
 
+
+
 class MainViewController: UITableViewController, NumberOfRecordDelegate {
     
 
@@ -17,11 +19,15 @@ class MainViewController: UITableViewController, NumberOfRecordDelegate {
     var records: Results<Audio>!
     var player: AVAudioPlayer!
     var playbackSession: AVAudioSession!
+    var selectedCellIndexPath: IndexPath?
+    var selectedCellHeight: CGFloat = 200
+    var unselectedCellHeight: CGFloat = 75
+   
     
     var footerView: UIView = {
-        let view = UIView(frame: CGRect(x: 0, y: 150, width: 100, height: 100))
-        view.backgroundColor = .yellow
-        //view.setGradientBackground(colorOne: .clear, colorTwo: #colorLiteral(red: 0.7450980544, green: 0.1568627506, blue: 0.07450980693, alpha: 1), location: [0.7,1.0])
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 2))
+        view.backgroundColor = #colorLiteral(red: 0.1019607857, green: 0.2784313858, blue: 0.400000006, alpha: 1)
+        //view.setGradientBackground(colorOne: #colorLiteral(red: 0.7450980544, green: 0.1568627506, blue: 0.07450980693, alpha: 1), colorTwo: #colorLiteral(red: 0.1411764771, green: 0.3960784376, blue: 0.5647059083, alpha: 1), location: [0.0,1.0])
         return view
     }()
     
@@ -29,12 +35,17 @@ class MainViewController: UITableViewController, NumberOfRecordDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = #colorLiteral(red: 0.1411764771, green: 0.3960784376, blue: 0.5647059083, alpha: 1)
-        //view.setGradientBackground(colorOne: .clear, colorTwo: #colorLiteral(red: 0.7450980544, green: 0.1568627506, blue: 0.07450980693, alpha: 1), location: [0.4, 1.0])
+        //view.setGradientBackground(colorOne: #colorLiteral(red: 0.7450980544, green: 0.1568627506, blue: 0.07450980693, alpha: 1), colorTwo: #colorLiteral(red: 0.1411764771, green: 0.3960784376, blue: 0.5647059083, alpha: 1), location: [0.4, 1.0])
         setView()
         
     }
 
     override func viewDidAppear(_ animated: Bool) {
+        
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        navigationController?.navigationBar.backgroundColor = #colorLiteral(red: 0.1411764771, green: 0.3960784376, blue: 0.5647059083, alpha: 1)
         tableView.reloadData()
     }
     
@@ -51,9 +62,9 @@ class MainViewController: UITableViewController, NumberOfRecordDelegate {
     }
     
     func setView() {
-        
+               
         records = StorageManager.shared.fetchRecords()
-        print(records.count )
+       
         
         let newRecordButton: UIBarButtonItem = {
             let button = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewRecord))
@@ -63,6 +74,9 @@ class MainViewController: UITableViewController, NumberOfRecordDelegate {
         navigationItem.rightBarButtonItem = newRecordButton
         
         navigationController?.navigationBar.backgroundColor = #colorLiteral(red: 0.1411764771, green: 0.3960784376, blue: 0.5647059083, alpha: 1)
+        navigationController?.navigationBar.tintColor = #colorLiteral(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
+        let attrs = [NSAttributedString.Key.foregroundColor: UIColor.white]
+        
         
         self.title = "Record list"
         if #available(iOS 11.0, *) {
@@ -70,10 +84,9 @@ class MainViewController: UITableViewController, NumberOfRecordDelegate {
         }
         
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-        //tableView.footerView(forSection: 0)
+        tableView.register(RecordCell.self, forCellReuseIdentifier: "recordCell")
         tableView.tableFooterView = footerView
-        tableView.separatorColor = #colorLiteral(red: 1, green: 1, blue: 1, alpha: 1)
-        //tableView.separatorStyle = .none
+        tableView.separatorStyle = .none
     }
 
    func getDirectory() -> URL {
@@ -89,22 +102,22 @@ extension MainViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-      /*  let record = records[indexPath.row]
-        playbackSession = AVAudioSession.sharedInstance()
-       
-        do {
-            try playbackSession.setCategory(.playback)
-            try playbackSession.setActive(true)
-            player = try AVAudioPlayer(data: record.recordData!)
-            player.prepareToPlay()
-            player.volume = 5.0
-            print("do circle")
-            } catch {
-                print("Error of playback")
-            }
+        if selectedCellIndexPath != nil && selectedCellIndexPath == indexPath {
+            selectedCellIndexPath = nil
+            PlaybackManager.shared.stop()
             
-        player.play()
-       */
+        } else {
+            selectedCellIndexPath = indexPath
+            PlaybackManager.shared.prepareToPlayback(numberOfRecord: indexPath.row)
+        }
+        
+        tableView.beginUpdates()
+        tableView.endUpdates()
+
+        if selectedCellIndexPath != nil {
+            tableView.scrollToRow(at: indexPath, at: .none, animated: true)
+        }
+      
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -112,21 +125,34 @@ extension MainViewController {
     }
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 60
+        if selectedCellIndexPath == indexPath {
+            return selectedCellHeight
+        }
+        return unselectedCellHeight
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "recordCell", for: indexPath) as! RecordCell
         cell.selectionStyle = .none
-        cell.backgroundColor = #colorLiteral(red: 0.1411764771, green: 0.3960784376, blue: 0.5647059083, alpha: 1)
-        cell.tintColor = #colorLiteral(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
+        cell.clipsToBounds = true
+        
         
         let record = records[indexPath.row]
         let df = DateFormatter()
-        df.dateFormat = "dd.MM.YY - HH.mm.ss"
+        df.dateFormat = "dd/MM/YY"
+        var timeOfRecord = TimeCounter()
+        timeOfRecord.deciSeconds = Int(record.recordDuration)
+        
+        //cell.playbarSlider.maximumValue = Float(record.recordDuration / 10)
+        //cell.durationOfPlayback = record.recordDuration / 10
+        cell.nameRecordLabel.text = "Record \(indexPath.row + 1)"
+        cell.dateRecordLabel.text = "\(df.string(from: record.recordDate!))"
+        cell.durationRecordLabel.text = timeOfRecord.descriptionSecond
+        cell.endTimeOfPlaybarLabel.text = timeOfRecord.descriptionThird
         
         
-        cell.textLabel?.text = "Record \(df.string(from: record.recordDate!))"
+        //cell.progressTimeSlider.value = Float(PlaybackManager.shared.currentPlaybackTime)
+        
         return cell
     }
     
