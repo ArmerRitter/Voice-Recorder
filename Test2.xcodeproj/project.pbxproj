@@ -137,22 +137,62 @@
 		B04FBE772417D75700D2211F /* Test2 */ = {
 			isa = PBXGroup;
 			children = (
-				B04FBE782417D75700D2211F /* AppDelegate.swift */,
-				B04FBE7A2417D75700D2211F /* SceneDelegate.swift */,
-				B04FBEF324182DA900D2211F /* MainViewController.swift */,
-				B04FBEF524182DC000D2211F /* RecordViewController.swift */,
-				B056C22A24221F7100412BBD /* RecordCell.swift */,
-				B050158E241D3177004CECB8 /* TimeCounter.swift */,
-				B04FBEF724182DCD00D2211F /* Audio.swift */,
-				B050E9242423A091005B0191 /* PlaybackManager.swift */,
-				B04FBEF924182DE000D2211F /* StorageManager.swift */,
+				B0500ED624289A820093D73D /* Model */,
+				B0500ED524289A760093D73D /* View */,
+				B0500ED424289A590093D73D /* Controller */,
+				B050CF7F24290F3C009D846A /* Manager */,
 				B050FF5F24277F2C001C604D /* Extension.swift */,
-				B04FBE7E2417D75700D2211F /* Main.storyboard */,
-				B04FBE812417D75900D2211F /* Assets.xcassets */,
-				B04FBE832417D75900D2211F /* LaunchScreen.storyboard */,
+				B050158E241D3177004CECB8 /* TimeCounter.swift */,
+				B050CF81242939EF009D846A /* Supported files */,
 				B04FBE862417D75900D2211F /* Info.plist */,
 			);
 			path = Test2;
+			sourceTree = "<group>";
+		};
+		B0500ED424289A590093D73D /* Controller */ = {
+			isa = PBXGroup;
+			children = (
+				B04FBEF324182DA900D2211F /* MainViewController.swift */,
+				B04FBEF524182DC000D2211F /* RecordViewController.swift */,
+			);
+			path = Controller;
+			sourceTree = "<group>";
+		};
+		B0500ED524289A760093D73D /* View */ = {
+			isa = PBXGroup;
+			children = (
+				B056C22A24221F7100412BBD /* RecordCell.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		B0500ED624289A820093D73D /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				B04FBEF724182DCD00D2211F /* Audio.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		B050CF7F24290F3C009D846A /* Manager */ = {
+			isa = PBXGroup;
+			children = (
+				B050E9242423A091005B0191 /* PlaybackManager.swift */,
+				B04FBEF924182DE000D2211F /* StorageManager.swift */,
+			);
+			path = Manager;
+			sourceTree = "<group>";
+		};
+		B050CF81242939EF009D846A /* Supported files */ = {
+			isa = PBXGroup;
+			children = (
+				B04FBE782417D75700D2211F /* AppDelegate.swift */,
+				B04FBE7A2417D75700D2211F /* SceneDelegate.swift */,
+				B04FBE7E2417D75700D2211F /* Main.storyboard */,
+				B04FBE812417D75900D2211F /* Assets.xcassets */,
+				B04FBE832417D75900D2211F /* LaunchScreen.storyboard */,
+			);
+			path = "Supported files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

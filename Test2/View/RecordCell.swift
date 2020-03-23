@@ -27,6 +27,7 @@ class RecordCell: UITableViewCell {
     var timeIncrementCounter: TimeCounter = TimeCounter()
     var timeDecrementCounter: TimeCounter = TimeCounter()
     
+    
 //MARK: UI Elements
     var backgroundCellView: UIView = {
         let view = UIView(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 200))
@@ -86,6 +87,22 @@ class RecordCell: UITableViewCell {
         return view
     }()
     
+    var forwardButton: UIButton = {
+        let btn = UIButton()
+        btn.setImage(UIImage(named: "forward"), for: .normal)
+        btn.clipsToBounds = true
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
+    }()
+    
+    var backwardButton: UIButton = {
+        let btn = UIButton()
+        btn.setImage(UIImage(named: "backward"), for: .normal)
+        btn.clipsToBounds = true
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
+    }()
+    
     var playButton: UIButton = {
         let btn = UIButton()
         btn.layer.cornerRadius = 25
@@ -109,7 +126,7 @@ class RecordCell: UITableViewCell {
         }()
     
     
-//MARK: Play Button Realization
+//MARK: Play Button - Action
     @objc func playAudio() {
         
         PlaybackManager.shared.player.delegate = self
@@ -124,6 +141,7 @@ class RecordCell: UITableViewCell {
             startValueOfTimer = CACurrentMediaTime()
             timer = CADisplayLink(target: self, selector: #selector(updateAnimationOfPlaybar))
             timer.add(to: .main, forMode: .common)
+            playbarSlider.value = 0
             
             playButtonImage.isHidden = true
             pauseButtonImage.isHidden = false
@@ -137,22 +155,95 @@ class RecordCell: UITableViewCell {
             
             PlaybackManager.shared.pause()
             timer.isPaused = true
+          
             startValueOfPlayback = playbarSlider.value
             stateOfPlayer = .Pause
         case .Pause:
             print("play")
             playButtonImage.isHidden = true
             pauseButtonImage.isHidden = false
-            
+                     
+            timer.isPaused = false
             PlaybackManager.shared.play()
             startValueOfTimer = CACurrentMediaTime()
-            timer.isPaused = false
             stateOfPlayer = .Play
         }
             
     }
     
-//MARK: Updating Playbar Functions
+//MARK: Playbar Updating - Functions
+    
+    @objc func makePlaybackForward() {
+   
+       durationOfPlayback = PlaybackManager.shared.playbackDuration
+       playbarSlider.maximumValue = Float(durationOfPlayback)
+       
+        guard playbarSlider.value < playbarSlider.maximumValue else { return }
+           
+            if stateOfPlayer == .Play {
+                timer.isPaused = true
+                PlaybackManager.shared.pause()
+            }
+                
+                playbarSlider.value += 1
+                PlaybackManager.shared.player.currentTime += 1
+                startValueOfPlayback = playbarSlider.value
+            
+            if playbarSlider.value == playbarSlider.maximumValue{
+                updatePlaybarTimers()
+                refreshPlaybar()
+                return
+            }
+            
+            if stateOfPlayer == .Play {
+                PlaybackManager.shared.play()
+                startValueOfTimer = CACurrentMediaTime()
+                timer.isPaused = false
+            }
+        
+            updatePlaybarTimers()
+        
+            
+        
+        print(playbarSlider.value)
+        print(PlaybackManager.shared.player.currentTime)
+   
+    }
+    
+    @objc func makePlaybackBackward() {
+        
+        guard playbarSlider.value > 0 else { return }
+        
+        if playbarSlider.value == playbarSlider.maximumValue {
+            PlaybackManager.shared.player.currentTime = durationOfPlayback
+            
+            playbarSlider.value -= 1
+            PlaybackManager.shared.player.currentTime -= 1
+            startValueOfPlayback = playbarSlider.value
+           
+            updatePlaybarTimers()
+            return
+        }
+        
+        if stateOfPlayer == .Play {
+            timer.isPaused = true
+            PlaybackManager.shared.pause()
+        }
+        
+        playbarSlider.value -= 1
+        PlaybackManager.shared.player.currentTime -= 1
+        startValueOfPlayback = playbarSlider.value
+                
+        if stateOfPlayer == .Play {
+            PlaybackManager.shared.play()
+            startValueOfTimer = CACurrentMediaTime()
+            timer.isPaused = false
+        }
+            
+             updatePlaybarTimers()
+         
+    }
+    
     @objc func updatePlaybarWithDrag() {
         print("drag")
         updatePlaybarTimers()
@@ -160,10 +251,8 @@ class RecordCell: UITableViewCell {
     
     @objc func updatePlaybarWithTouchDown() {
         print("down")
-        if stateOfPlayer == .Play {
             timer.isPaused = true
             PlaybackManager.shared.pause()
-        }
     }
     
     @objc func updatePlaybarWithTouchUp() {
@@ -172,6 +261,7 @@ class RecordCell: UITableViewCell {
         PlaybackManager.shared.player.currentTime = Double(playbarSlider.value)
         startValueOfPlayback = playbarSlider.value
         
+               
         updatePlaybarTimers()
         
         if stateOfPlayer == .Play {
@@ -195,21 +285,23 @@ class RecordCell: UITableViewCell {
     }
     
     @objc func updateAnimationOfPlaybar() {
+               
         let now = CACurrentMediaTime()
-        let endTime = startValueOfTimer + durationOfPlayback
-       
+        let endTime = now + durationOfPlayback
+        
         if now >= endTime {
             timer.isPaused = true
             timer.invalidate()
         }
         
         let percentage = (now - startValueOfTimer) / durationOfPlayback
-        playbarSlider.value = startValueOfPlayback + Float(percentage) * playbarSlider.maximumValue
-        
-        print(playbarSlider.value, "???", percentage)
-        print(PlaybackManager.shared.player.currentTime)
+        playbarSlider.value = startValueOfPlayback + Float(percentage * durationOfPlayback)
+          
+        print(playbarSlider.value, "???", PlaybackManager.shared.player.currentTime)
+       // print(PlaybackManager.shared.player.currentTime)
         
         updatePlaybarTimers()
+        
     }
     
     func updatePlaybarTimers() {
@@ -239,15 +331,23 @@ class RecordCell: UITableViewCell {
         addSubview(dateRecordLabel)
         addSubview(durationRecordLabel)
         addSubview(playButton)
+        addSubview(forwardButton)
+        addSubview(backwardButton)
         playButton.addSubview(playButtonImage)
         playButton.addSubview(pauseButtonImage)
         addSubview(playbarSlider)
         addSubview(startTimeOfPlaybarLabel)
         addSubview(endTimeOfPlaybarLabel)
         
+       
+                
         print(durationOfPlayback, "ff")
         pauseButtonImage.isHidden = true
         playButton.addTarget(self, action: #selector(playAudio), for: .touchUpInside)
+        
+        forwardButton.addTarget(self, action: #selector(makePlaybackForward), for: .touchUpInside)
+        backwardButton.addTarget(self, action: #selector(makePlaybackBackward), for: .touchUpInside)
+        
         
         playbarSlider.addTarget(self, action: #selector(updatePlaybarWithDrag), for: .valueChanged)
         playbarSlider.addTarget(self, action: #selector(updatePlaybarWithTouchUp), for: UIControl.Event(rawValue: UIControl.Event.touchUpOutside.rawValue | UIControl.Event.touchUpInside.rawValue))
@@ -269,7 +369,16 @@ class RecordCell: UITableViewCell {
         playButton.centerXAnchor.constraint(equalTo: self.centerXAnchor).isActive = true
         playButton.widthAnchor.constraint(equalToConstant: 50).isActive = true
         playButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+
+        forwardButton.topAnchor.constraint(equalTo: self.topAnchor, constant: 132).isActive = true
+        forwardButton.leftAnchor.constraint(equalTo: playButton.rightAnchor, constant: 20).isActive = true
+        forwardButton.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        forwardButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
         
+        backwardButton.topAnchor.constraint(equalTo: self.topAnchor, constant: 132).isActive = true
+        backwardButton.trailingAnchor.constraint(equalTo: playButton.leadingAnchor, constant: -20).isActive = true
+        backwardButton.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        backwardButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
         
         nameRecordLabel.topAnchor.constraint(equalTo: self.topAnchor, constant: 10).isActive = true
         nameRecordLabel.leftAnchor.constraint(equalTo: self.leftAnchor, constant: 10).isActive = true

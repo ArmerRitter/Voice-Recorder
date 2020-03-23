@@ -20,7 +20,7 @@ struct TimeCounter: CustomStringConvertible {
     var deciSeconds: Int
     
     
-    
+    // 00 : 00,0  style
     var description: String {
         
         guard seconds > 9 else {
@@ -32,7 +32,7 @@ struct TimeCounter: CustomStringConvertible {
         return " \(minuts) : \(seconds),\(deciSeconds - seconds * 10 - minuts * 600)"
     }
     
-    
+     // 00:00  style
     var descriptionSecond: String {
         
         guard seconds > 9 else {
@@ -44,6 +44,7 @@ struct TimeCounter: CustomStringConvertible {
         return " \(minuts):\(seconds)"
     }
     
+    // -00:00  style
     var descriptionThird: String {
            
            guard seconds > 9 else {

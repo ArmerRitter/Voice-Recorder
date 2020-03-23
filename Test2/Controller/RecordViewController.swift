@@ -10,9 +10,6 @@ import UIKit
 import AVFoundation
 import RealmSwift
 
-protocol NumberOfRecordDelegate: class {
-    func update(n: Int)
-}
 
 enum RecorderEror: Error {
     case invalidPath
@@ -25,17 +22,19 @@ enum RecorderButtonState {
 }
 
 class RecordViewController: UIViewController, AVAudioRecorderDelegate {
-    
+  
+//MARK: Variables
     var recordingSession: AVAudioSession!
     var recorder: AVAudioRecorder!
     var stateOfRecorder: RecorderButtonState = .Start
     var timer: Timer?
-    var timeIncrementCounter = TimeCounter()
-    var constraints: [String : NSLayoutConstraint]!
+    var timeIncrementCounter: TimeCounter = TimeCounter()
+    var animatedConstraints: [String : NSLayoutConstraint]!
     var recordPowerViews: [UIView] = []
     let screenSize: CGRect = UIScreen.main.bounds
     
-    var counter = 0 {
+    //record animation
+    var counterOfVisualView = 0 {
         didSet {
             let recPower: CGFloat = CGFloat(55 + recorder.averagePower(forChannel: 0))
             
@@ -51,9 +50,9 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
         }
     }
     
-    weak var delegate: NumberOfRecordDelegate?
-
-    let recordingButton: UIButton = {
+    
+ //MARK: UI Elements
+    let recordButton: UIButton = {
         let btn = UIButton()
         btn.setTitleColor(#colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), for: .normal)
         btn.titleLabel?.font = UIFont.boldSystemFont(ofSize: 22)
@@ -71,7 +70,6 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
         let lbl = UILabel()
         lbl.text = " 00 : 00,0"
         lbl.font = .boldSystemFont(ofSize: 46)
-        //lbl.backgroundColor = .purple
         lbl.textColor = .white
         lbl.textAlignment = .left
         lbl.translatesAutoresizingMaskIntoConstraints = false
@@ -84,7 +82,7 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
         return view
     }()
     
-    var pauseSymbolRight: UIView = {
+    var pauseSymbolRightView: UIView = {
        let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.isUserInteractionEnabled = false
@@ -93,7 +91,7 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
         return view
     }()
     
-    var pauseSymbolLeft: UIView = {
+    var pauseSymbolLeftView: UIView = {
        let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.isUserInteractionEnabled = false
@@ -102,7 +100,8 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
         return view
     }()
     
-    //MARK: ViewDidLoad
+    
+//MARK: ViewDidLoad
     override func viewDidLoad() {
         view.backgroundColor = #colorLiteral(red: 0.1411764771, green: 0.3960784376, blue: 0.5647059083, alpha: 1)
         view.setGradientBackground(colorOne: #colorLiteral(red: 0.7450980544, green: 0.1568627506, blue: 0.07450980693, alpha: 1), colorTwo: #colorLiteral(red: 0.1411764771, green: 0.3960784376, blue: 0.5647059083, alpha: 1), location: [0.3, 1.0])
@@ -119,7 +118,6 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
                     print("Error: recorder is not ready")
                     self.recorder = nil
                 }
-                //self.setupRecorder()
             }
         }
         
@@ -128,6 +126,100 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
         
     }
     
+
+//MARK: Record Button - Action
+    @objc func startRecord(sender: UIButton) {
+        
+        switch stateOfRecorder {
+        case .Start:
+            recorder.record()
+            setAndResetTimer(on: true)
+            animateRecordButton(state: stateOfRecorder)
+            recordButton.setTitle("", for: .normal)
+            navigationItem.leftBarButtonItem?.isEnabled = true
+            stateOfRecorder = .Pause
+        case .Pause:
+            recorder.pause()
+            setAndResetTimer(on: false)
+            animateRecordButton(state: stateOfRecorder)
+            stateOfRecorder = .Resume
+        case .Resume:
+            recorder.record()
+            setAndResetTimer(on: true)
+            animateRecordButton(state: stateOfRecorder)
+            recordButton.setTitle("", for: .normal)
+            stateOfRecorder = .Pause
+        }
+        
+    }
+    
+    
+//MARK: Record Button - Animation
+    func animateRecordButton(state: RecorderButtonState) {
+       
+        switch state {
+        case .Start: //Start
+            animatedConstraints["leftSymbolRight"]!.isActive = false
+            animatedConstraints["rightSymbolRight"]!.isActive = true
+            animatedConstraints["rightSymbolLeft"]!.isActive = false
+            animatedConstraints["leftSymbolLeft"]!.isActive = true
+                
+            UIView.animate(withDuration: 0.5) {
+               self.view.layoutIfNeeded()
+            }
+        case .Pause: //Pause
+            animatedConstraints["widthRecBtn"]!.isActive = false
+            animatedConstraints["widthRecBtnNew"]!.isActive = true
+            
+            UIView.animate(withDuration: 0.5, animations: {
+                let translationRight = CGAffineTransform(translationX: 40, y: 0)
+                let translationLeft = CGAffineTransform(translationX: -40, y: 0)
+                
+                self.pauseSymbolRightView.transform = translationRight
+                self.pauseSymbolLeftView.transform = translationLeft
+
+                self.view.layoutIfNeeded()
+                
+            }) { (finish) in
+                self.recordButton.setTitle("RESUME", for: .normal)
+            }
+        case .Resume: //Resume
+            animatedConstraints["widthRecBtnNew"]!.isActive = false
+            animatedConstraints["widthRecBtn"]!.isActive = true
+            
+            UIView.animate(withDuration: 0.5) {
+               let scale = CGAffineTransform(scaleX: 1, y: 1)
+               self.pauseSymbolRightView.transform = scale
+               self.pauseSymbolLeftView.transform = scale
+               
+               self.view.layoutIfNeeded()
+            }
+        }
+    }
+    
+    func setAndResetTimer(on: Bool) {
+        
+        if on {
+            timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(updateAnimationOfRecord), userInfo: nil, repeats: true)
+            RunLoop.current.add(timer!, forMode: .common)
+        } else {
+            timer?.invalidate()
+        }
+    }
+    
+    @objc func updateAnimationOfRecord() {
+        timeIncrementCounter.deciSeconds += 1
+        
+        recorder.updateMeters()
+        
+        let viewVisualAudio = visualAudioView.clone()
+        recordPowerViews.append(viewVisualAudio)
+        counterOfVisualView += 1
+        timeLabel.text = timeIncrementCounter.description
+    }
+    
+    
+//MARK: Setup Recorder
     func getDirectory() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         let url = paths[0].appendingPathComponent("Record.m4a")
@@ -140,101 +232,27 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
         let settings = [AVFormatIDKey: Int(kAudioFormatMPEG4AAC), AVSampleRateKey: 12000, AVNumberOfChannelsKey: 1, AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue]
         
         
-           try recordingSession.setCategory(.playAndRecord)
-           try recordingSession.setActive(true)
-           recorder =  try AVAudioRecorder(url: filename, settings: settings)
-            recorder.delegate = self
+        try recordingSession.setCategory(.playAndRecord)
+        try recordingSession.setActive(true)
+        recorder =  try AVAudioRecorder(url: filename, settings: settings)
+        recorder.delegate = self
         recorder.isMeteringEnabled = true
     }
+    
 
-    @objc func startRecord(sender: UIButton) {
+//MARK: Manage Audio Data
+    func fetchAudioData() throws -> Data {
+        let documentDirectory = FileManager.SearchPathDirectory.documentDirectory
+        let userDomainMask = FileManager.SearchPathDomainMask.userDomainMask
+        let paths = NSSearchPathForDirectoriesInDomains(documentDirectory, userDomainMask, true)
         
-        switch stateOfRecorder {
-        case .Start:
-            recorder.record()
-            setAndResetTimer(on: true)
-            animateRecButton(state: stateOfRecorder)
-            stateOfRecorder = .Pause
-            recordingButton.setTitle("", for: .normal)
-            navigationItem.leftBarButtonItem?.isEnabled = true
-        case .Pause:
-            recorder.pause()
-            setAndResetTimer(on: false)
-            animateRecButton(state: stateOfRecorder)
-            stateOfRecorder = .Resume
-        case .Resume:
-            recorder.record()
-            setAndResetTimer(on: true)
-            animateRecButton(state: stateOfRecorder)
-            stateOfRecorder = .Pause
-            recordingButton.setTitle("", for: .normal)
-        }
-        
-    }
-    
-    func animateRecButton(state: RecorderButtonState) {
-       
-        switch state {
-        case .Start:
-            constraints["leftSymbolRight"]!.isActive = false
-            constraints["rightSymbolRight"]!.isActive = true
-            constraints["rightSymbolLeft"]!.isActive = false
-            constraints["leftSymbolLeft"]!.isActive = true
-                
-            UIView.animate(withDuration: 0.5) {
-               self.view.layoutIfNeeded()
-            }
-        case .Pause:
-            constraints["widthRecBtn"]!.isActive = false
-            constraints["widthRecBtnNew"]!.isActive = true
+        if let dirPath = paths.first {
+            let url = URL(fileURLWithPath: dirPath).appendingPathComponent("Record.m4a")
             
-            UIView.animate(withDuration: 0.5, animations: {
-                let translationRight = CGAffineTransform(translationX: 40, y: 0)
-                let translationLeft = CGAffineTransform(translationX: -40, y: 0)
-                
-                self.pauseSymbolRight.transform = translationRight
-                self.pauseSymbolLeft.transform = translationLeft
-
-                self.view.layoutIfNeeded()
-                
-            }) { (finish) in
-                self.recordingButton.setTitle("RESUME", for: .normal)
-                
-            }
-            
-        case .Resume:
-            constraints["widthRecBtnNew"]!.isActive = false
-            constraints["widthRecBtn"]!.isActive = true
-            
-            UIView.animate(withDuration: 0.5) {
-               let scale = CGAffineTransform(scaleX: 1, y: 1)
-               self.pauseSymbolRight.transform = scale
-               self.pauseSymbolLeft.transform = scale
-               
-               self.view.layoutIfNeeded()
-            }
+            let data = try Data(contentsOf: url)
+            return data
         }
-    }
-    
-    func setAndResetTimer(on: Bool) {
-        
-        if on {
-            timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(onTimer), userInfo: nil, repeats: true)
-            RunLoop.current.add(timer!, forMode: .common)
-        } else {
-            timer?.invalidate()
-        }
-    }
-    
-    @objc func onTimer() {
-        timeIncrementCounter.deciSeconds += 1
-        
-            recorder.updateMeters()
-           // print(recorder.peakPower(forChannel: 0))
-        let viewVisualAudio = visualAudioView.clone()
-        recordPowerViews.append(viewVisualAudio)
-        counter += 1
-        timeLabel.text = timeIncrementCounter.description
+        throw RecorderEror.invalidPath
     }
     
     @objc func doneRecord() {
@@ -256,68 +274,55 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
         navigationController?.popViewController(animated: true)
     }
     
-    func fetchAudioData() throws -> Data {
-        let documentDirectory = FileManager.SearchPathDirectory.documentDirectory
-        let userDomainMask = FileManager.SearchPathDomainMask.userDomainMask
-        let paths = NSSearchPathForDirectoriesInDomains(documentDirectory, userDomainMask, true)
-        
-        if let dirPath = paths.first {
-            let url = URL(fileURLWithPath: dirPath).appendingPathComponent("Record.m4a")
-
-            let data = try Data(contentsOf: url)
-            return data
-        }
-        throw RecorderEror.invalidPath
-    }
-    
-    
     
 //MARK: Setup UI
     func setView() {
-        view.addSubview(recordingButton)
+        view.addSubview(recordButton)
         view.addSubview(timeLabel)
         
-        recordingButton.addSubview(pauseSymbolRight)
-        recordingButton.addSubview(pauseSymbolLeft)
+        recordButton.addSubview(pauseSymbolRightView)
+        recordButton.addSubview(pauseSymbolLeftView)
         
         navigationController?.navigationBar.backgroundColor = #colorLiteral(red: 0.7450980544, green: 0.1568627506, blue: 0.07450980693, alpha: 1)
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(doneRecord))
         navigationItem.leftBarButtonItem?.tintColor = .white
         navigationItem.leftBarButtonItem?.isEnabled = false
     }
+
     
+//MARK: Setup Constraints
     func setConstraints() {
        
-        recordingButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -100).isActive = true
-            recordingButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-           let widthConstraint = recordingButton.widthAnchor.constraint(equalToConstant: 80)
-           let widthConstraint2 = recordingButton.widthAnchor.constraint(equalToConstant: 160)
+        recordButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -100).isActive = true
+            recordButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+           let widthConstraint = recordButton.widthAnchor.constraint(equalToConstant: 80)
+           let widthConstraint2 = recordButton.widthAnchor.constraint(equalToConstant: 160)
             widthConstraint.isActive = true
-            recordingButton.heightAnchor.constraint(equalToConstant: 80).isActive = true
+            recordButton.heightAnchor.constraint(equalToConstant: 80).isActive = true
             
         timeLabel.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -screenSize.height / 2 - 100).isActive = true
             timeLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
             timeLabel.widthAnchor.constraint(equalToConstant: 205).isActive = true
             timeLabel.heightAnchor.constraint(equalToConstant: 44).isActive = true
             
-            let leftConstraint = pauseSymbolRight.leftAnchor.constraint(equalTo: recordingButton.leftAnchor, constant:  -30)
+            let leftConstraint = pauseSymbolRightView.leftAnchor.constraint(equalTo: recordButton.leftAnchor, constant:  -30)
             leftConstraint.isActive = true
-            let rightConstraint = pauseSymbolRight.rightAnchor.constraint(equalTo: recordingButton.rightAnchor, constant:  -25)
+            let rightConstraint = pauseSymbolRightView.rightAnchor.constraint(equalTo: recordButton.rightAnchor, constant:  -25)
             
-            pauseSymbolRight.centerYAnchor.constraint(equalTo: recordingButton.centerYAnchor).isActive = true
-            pauseSymbolRight.widthAnchor.constraint(equalToConstant: 10).isActive = true
-            pauseSymbolRight.heightAnchor.constraint(equalToConstant: 40).isActive = true
+            pauseSymbolRightView.centerYAnchor.constraint(equalTo: recordButton.centerYAnchor).isActive = true
+            pauseSymbolRightView.widthAnchor.constraint(equalToConstant: 10).isActive = true
+            pauseSymbolRightView.heightAnchor.constraint(equalToConstant: 40).isActive = true
             
             
-            let rightConstraint2 = pauseSymbolLeft.rightAnchor.constraint(equalTo: recordingButton.rightAnchor, constant:  30)
+            let rightConstraint2 = pauseSymbolLeftView.rightAnchor.constraint(equalTo: recordButton.rightAnchor, constant:  30)
             rightConstraint2.isActive = true
-            let leftConstraint2 = pauseSymbolLeft.leftAnchor.constraint(equalTo: recordingButton.leftAnchor, constant:  25)
+            let leftConstraint2 = pauseSymbolLeftView.leftAnchor.constraint(equalTo: recordButton.leftAnchor, constant:  25)
             
-            pauseSymbolLeft.centerYAnchor.constraint(equalTo: recordingButton.centerYAnchor).isActive = true
-            pauseSymbolLeft.widthAnchor.constraint(equalToConstant: 10).isActive = true
-            pauseSymbolLeft.heightAnchor.constraint(equalToConstant: 40).isActive = true
+            pauseSymbolLeftView.centerYAnchor.constraint(equalTo: recordButton.centerYAnchor).isActive = true
+            pauseSymbolLeftView.widthAnchor.constraint(equalToConstant: 10).isActive = true
+            pauseSymbolLeftView.heightAnchor.constraint(equalToConstant: 40).isActive = true
             
-            constraints = ["widthRecBtn" : widthConstraint,                        "widthRecBtnNew" : widthConstraint2,
+            animatedConstraints = ["widthRecBtn" : widthConstraint,                        "widthRecBtnNew" : widthConstraint2,
                            "leftSymbolRight" : leftConstraint,
                            "rightSymbolRight" : rightConstraint,
                            "leftSymbolLeft" : leftConstraint2,
@@ -325,7 +330,6 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
             
         }
         
-        
-    
+
 }
 
