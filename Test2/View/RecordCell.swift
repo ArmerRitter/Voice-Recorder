@@ -217,8 +217,8 @@ class RecordCell: UITableViewCell {
         if playbarSlider.value == playbarSlider.maximumValue {
             PlaybackManager.shared.player.currentTime = durationOfPlayback
             
-            playbarSlider.value -= 1
-            PlaybackManager.shared.player.currentTime -= 1
+            playbarSlider.value -= 10
+            PlaybackManager.shared.player.currentTime -= 10
             startValueOfPlayback = playbarSlider.value
            
             updatePlaybarTimers()
@@ -230,8 +230,8 @@ class RecordCell: UITableViewCell {
             PlaybackManager.shared.pause()
         }
         
-        playbarSlider.value -= 1
-        PlaybackManager.shared.player.currentTime -= 1
+        playbarSlider.value -= 10
+        PlaybackManager.shared.player.currentTime -= 10
         startValueOfPlayback = playbarSlider.value
                 
         if stateOfPlayer == .Play {
