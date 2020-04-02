@@ -185,7 +185,7 @@ class RecordCell: UITableViewCell {
                 PlaybackManager.shared.pause()
             }
                 
-                playbarSlider.value += 1
+                playbarSlider.value += 10
                 PlaybackManager.shared.player.currentTime += 1
                 startValueOfPlayback = playbarSlider.value
             

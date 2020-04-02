@@ -47,7 +47,7 @@
 		4CF1F0B68EA8F1215877F5E8 /* Pods-Test2.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Test2.debug.xcconfig"; path = "Target Support Files/Pods-Test2/Pods-Test2.debug.xcconfig"; sourceTree = "<group>"; };
 		7ECF0CD5F9619DD6050422B8 /* Pods_Test2.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Test2.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FD8CB191A8C5B77D81E9B87 /* libPods-Test2.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Test2.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		B04FBE752417D75700D2211F /* VoceRecorder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VoceRecorder.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B04FBE752417D75700D2211F /* Voice Recorder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Voice Recorder.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B04FBE782417D75700D2211F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B04FBE7A2417D75700D2211F /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		B04FBE7F2417D75700D2211F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -129,7 +129,7 @@
 		B04FBE762417D75700D2211F /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B04FBE752417D75700D2211F /* VoceRecorder.app */,
+				B04FBE752417D75700D2211F /* Voice Recorder.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -206,9 +206,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		B04FBE742417D75700D2211F /* VoceRecorder */ = {
+		B04FBE742417D75700D2211F /* Voice Recorder */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B04FBE892417D75900D2211F /* Build configuration list for PBXNativeTarget "VoceRecorder" */;
+			buildConfigurationList = B04FBE892417D75900D2211F /* Build configuration list for PBXNativeTarget "Voice Recorder" */;
 			buildPhases = (
 				7C575D3134D1AF376FB23C37 /* [CP] Check Pods Manifest.lock */,
 				B04FBE712417D75700D2211F /* Sources */,
@@ -220,9 +220,9 @@
 			);
 			dependencies = (
 			);
-			name = VoceRecorder;
+			name = "Voice Recorder";
 			productName = Test2;
-			productReference = B04FBE752417D75700D2211F /* VoceRecorder.app */;
+			productReference = B04FBE752417D75700D2211F /* Voice Recorder.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -240,7 +240,7 @@
 					};
 				};
 			};
-			buildConfigurationList = B04FBE702417D75700D2211F /* Build configuration list for PBXProject "VoceRecorder" */;
+			buildConfigurationList = B04FBE702417D75700D2211F /* Build configuration list for PBXProject "Voice Recorder" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -253,7 +253,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				B04FBE742417D75700D2211F /* VoceRecorder */,
+				B04FBE742417D75700D2211F /* Voice Recorder */,
 			);
 		};
 /* End PBXProject section */
@@ -491,7 +491,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		B04FBE702417D75700D2211F /* Build configuration list for PBXProject "VoceRecorder" */ = {
+		B04FBE702417D75700D2211F /* Build configuration list for PBXProject "Voice Recorder" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B04FBE872417D75900D2211F /* Debug */,
@@ -500,7 +500,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B04FBE892417D75900D2211F /* Build configuration list for PBXNativeTarget "VoceRecorder" */ = {
+		B04FBE892417D75900D2211F /* Build configuration list for PBXNativeTarget "Voice Recorder" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B04FBE8A2417D75900D2211F /* Debug */,

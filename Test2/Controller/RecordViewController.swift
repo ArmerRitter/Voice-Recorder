@@ -30,25 +30,14 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
     var timer: Timer?
     var timeIncrementCounter: TimeCounter = TimeCounter()
     var animatedConstraints: [String : NSLayoutConstraint]!
-    var recordPowerViews: [UIView] = []
-    let screenSize: CGRect = UIScreen.main.bounds
+    var voicePiece = CALayer()
+    var replicator = CAReplicatorLayer()
+    var counterOfAnimations = 0
+    var lastScaleRate: CGFloat = 0.0
     
-    //record animation
-    var counterOfVisualView = 0 {
-        didSet {
-            let recPower: CGFloat = CGFloat(55 + recorder.averagePower(forChannel: 0))
-            
-            recordPowerViews[oldValue].frame.size.width = 15
-            recordPowerViews[oldValue].frame.size.height = 2 * recPower
-            recordPowerViews[oldValue].setGradientBackground(colorOne: #colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), colorTwo:.clear, location: [0.3, 1.0])
-          
-            for (i, value) in recordPowerViews.enumerated() {
-                value.frame.origin = CGPoint(x: Int(screenSize.width) - 20 * (oldValue - i), y: Int(screenSize.height / 2 - 50))
-            view.addSubview(value)
-                
-            }
-        }
-    }
+    let pieceLength: CGFloat = 4.0
+    let pieceOffset: CGFloat = 10.0
+    let screenSize: CGRect = UIScreen.main.bounds
     
     
  //MARK: UI Elements
@@ -207,14 +196,43 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
         }
     }
     
+    
+//MARK: Animation of record
     @objc func updateAnimationOfRecord() {
         timeIncrementCounter.deciSeconds += 1
+        counterOfAnimations += 1
         
         recorder.updateMeters()
         
-        let viewVisualAudio = visualAudioView.clone()
-        recordPowerViews.append(viewVisualAudio)
-        counterOfVisualView += 1
+        if counterOfAnimations == 2 {
+        
+        var scaleRate =  CGFloat(recorder.averagePower(forChannel: 0) + 55) / 3
+        
+        var k: CGFloat
+        let delta = abs(scaleRate - lastScaleRate)
+        
+            switch delta {
+            case 1...2: k = 1
+            case 2...3: k = 1.5
+            default:
+                k = 0.5
+            }
+
+        lastScaleRate = scaleRate
+        scaleRate *= k
+        print(scaleRate)
+        let scale = CABasicAnimation(keyPath: "transform.scale.y")
+        scale.fromValue = max(1,scaleRate)
+        scale.toValue = max(1,scaleRate)
+        scale.duration = 0.1
+        scale.isRemovedOnCompletion = false
+        scale.fillMode = .forwards
+        self.voicePiece.add(scale, forKey: nil)
+         
+        
+        counterOfAnimations = 0
+        }
+        
         timeLabel.text = timeIncrementCounter.description
     }
     
@@ -287,6 +305,25 @@ class RecordViewController: UIViewController, AVAudioRecorderDelegate {
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(doneRecord))
         navigationItem.leftBarButtonItem?.tintColor = .white
         navigationItem.leftBarButtonItem?.isEnabled = false
+        
+        //setup visualization record
+        replicator.frame = view.bounds
+        view.layer.addSublayer(replicator)
+        
+        voicePiece.frame = CGRect(
+        x: replicator.frame.size.width - pieceLength,
+        y: replicator.position.y,
+        width: pieceLength, height: pieceLength)
+        
+        voicePiece.backgroundColor = UIColor.white.cgColor
+        //voicePiece.setUltimateGradientBackground(colorOne: .clear, colorTwo: #colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), colorThree: .clear, location: [0.0,0.5,1.0])
+        voicePiece.cornerRadius = 1
+        
+        replicator.addSublayer(voicePiece)
+        let instanceCount = Int(view.frame.size.width / pieceOffset)
+        replicator.instanceCount = instanceCount
+        replicator.instanceTransform = CATransform3DMakeTranslation(-pieceOffset, 0.0, 0.0)
+        replicator.instanceDelay = 0.2
     }
 
     
